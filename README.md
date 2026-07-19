@@ -1,12 +1,12 @@
 # Telecom AI Data Analyst Agent
 
 Chat with your data in plain English and get back SQL, Python analysis, and
-charts — running entirely on your own machine, with no data sent to a
+charts running entirely on your own machine, with no data sent to a
 third-party API.
 
 Upload CSV/Excel files, or connect to a database. Ask a question. The
 agent (a local LLM via [Ollama](https://ollama.com)) decides which tools
-to call — inspect schema, run SQL, run pandas code, draw a chart — and
+to call inspect schema, run SQL, run pandas code, draw a chart, and
 answers using only what those tools return.
 
 ## Why local (Ollama) instead of a cloud LLM API?
@@ -18,7 +18,7 @@ so prompts, tool results, and data never leave your network.
 
 ## Quick start
 
-1. **Install Ollama** — [ollama.com/download](https://ollama.com/download)
+1. **Install Ollama**  [ollama.com/download](https://ollama.com/download)
 2. **Pull a tool-calling model:**
    ```bash
    ollama pull qwen3
@@ -36,12 +36,12 @@ so prompts, tool results, and data never leave your network.
    ```bash
    streamlit run app.py
    ```
-5. **Load data and ask questions** — upload `sample_data/sample_telecom_usage.csv`
+5. **Load data and ask questions**  upload `sample_data/sample_telecom_usage.csv`
    to try it immediately, or connect a real (ideally read-only) database
    connection string in the sidebar.
 
 Run `python3 test_pipeline.py` any time to sanity-check the data layer,
-SQL guard, sandbox, charts, and the agent's tool-calling loop (mocked —
+SQL guard, sandbox, charts, and the agent's tool-calling loop (mocked -
 no live model needed) after making changes.
 
 ## Architecture
@@ -64,7 +64,7 @@ no live model needed) after making changes.
                       + table + chart in the UI
 ```
 
-The LLM never touches the data directly — it only ever sees whatever a
+The LLM never touches the data directly - it only ever sees whatever a
 tool call returns. That's what makes `sql_guard`, `sandbox`, and the
 privacy mask effective: they sit *between* the model and the data,
 not inside the model's judgment.
@@ -87,7 +87,7 @@ pointing it at real subscriber data, read this section properly:
 
 - **Read-only SQL is defense-in-depth, not the boundary.** `sql_guard.py`
   blocks non-SELECT statements, but connect with a genuinely **read-only
-  database role** too — a keyword filter can in principle be worked
+  database role** too. A keyword filter can in principle be worked
   around, a DB permission can't.
 - **The Python sandbox is a guardrail, not isolation.** It restricts
   builtins/imports and enforces a timeout, but it's in-process `exec()`,
@@ -101,37 +101,37 @@ pointing it at real subscriber data, read this section properly:
 - **Prompt injection via data content is a real risk class here.** The
   agent reads back real row values, including free-text fields. A crafted
   value in the data (e.g. a support-ticket comment) could try to steer
-  the model. The hard boundaries — `sql_guard`, the sandbox, the masking —
+  the model. The hard boundaries `sql_guard`, the sandbox, the masking
   are what actually hold regardless of what the model is told to do; the
   system prompt instruction to treat data as data, not instructions, is a
   second layer, not the main defense.
 - **Log questions and generated SQL/code before any real rollout.** An
   audit trail of who asked what, and what was actually executed, is
-  standard practice for internal tools that touch customer data — this
+  standard practice for internal tools that touch customer data this
   prototype doesn't include it yet.
 - **Check with legal/compliance** if this will touch real subscriber
-  data — PTA data-handling requirements, retention limits, and access
+  data PTA data-handling requirements, retention limits, and access
   logging are compliance questions, not engineering ones, and are worth
   confirming before moving past a sandboxed pilot.
 
-## Known limitations (good next steps)
+## Known limitations
 
 - External DB mode assumes simple, unquoted table identifiers; reserved
   words or special characters in table names aren't handled.
 - `get_schema` on external databases uses `LIMIT 0`, which works on
-  Postgres/MySQL/SQLite/DuckDB but not SQL Server (`TOP 0`) or Oracle —
+  Postgres/MySQL/SQLite/DuckDB but not SQL Server (`TOP 0`) or Oracle
   a small dialect-aware tweak would fix that.
 - The sandbox's timeout *abandons* a runaway thread rather than killing
-  it (Python can't force-kill a thread) — fine for a demo, not for
+  it (Python can't force-kill a thread) fine for a demo, not for
   untrusted multi-user load.
-- No authentication on the Streamlit app itself — put it behind your
+- No authentication on the Streamlit app itself put it behind your
   existing SSO/VPN before sharing it beyond your own machine.
-- No conversation persistence — refreshing the page clears the chat.
+- No conversation persistence refreshing the page clears the chat.
 
 ## Extending it
 
 - Swap the LLM backend behind `core/agent.py` for an OpenAI-compatible
-  endpoint (vLLM, LM Studio, etc.) if you outgrow Ollama — the tool
+  endpoint (vLLM, LM Studio, etc.) if you outgrow Ollama the tool
   schemas in `core/tools.py` are already in the standard OpenAI
   function-calling shape.
 - Add a `forecast` tool (e.g. wrapping `statsmodels` or `prophet`) if
