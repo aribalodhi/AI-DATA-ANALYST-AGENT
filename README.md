@@ -1,4 +1,4 @@
-# Telecom AI Data Analyst Agent
+# Locus - AI Data Analyst Agent
 
 Chat with your data in plain English and get back SQL, Python analysis, and
 charts running entirely on your own machine, with no data sent to a
